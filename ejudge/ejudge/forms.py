@@ -18,14 +18,12 @@ class SubmissionForm(forms.Form):
         ("Python", "Python")
     )
 
-    code = forms.CharField(required=False)
     language = forms.ChoiceField(choices=LANGUAGES)
+    code = forms.CharField(required=False)
     # todo: submit button on the form
 
     def __init__(self, *args, **kwargs):
-        self.contest_slug_name = kwargs.pop("contest", None)
         # todo: test if it works
-        self.fields["problems"] = forms.ChoiceField(choices=self.get_all_problems_for_contest(self.contest_slug_name))
         # user = kwargs.pop('user', AnonymousUser())
         super(SubmissionForm, self).__init__(*args, **kwargs)
 

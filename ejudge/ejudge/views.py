@@ -7,11 +7,11 @@ def index(request):
     return HttpResponse("Hello, world. You're at the polls index.")
 
 
-def submit_solution(request, contest_slug_name):
+def submit_solution(request, problem_slug):
     if request.method == "POST":
         # todo: process form data
         return 0
     else:
-        form = SubmissionForm(contest_slug_name=contest_slug_name)
+        form = SubmissionForm()
 
-    return render(request, "submission_form.html", {"form": form})
+    return render(request, "submission_form.html", {"form": form, })

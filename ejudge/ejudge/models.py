@@ -6,13 +6,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 
-class BaseClass(models.Model):
-    class Meta:
-        abstract = True
-        app_label = "ejudge"
-
-
-class Contest(BaseClass):
+class Contest(models.Model):
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(unique=True)
     start = models.DateTimeField(default=timezone.now())
@@ -101,7 +95,7 @@ def get_or_create_default_contest():
     return contest
 
 
-class Problem(BaseClass):
+class Problem(models.Model):
     contest = models.ForeignKey(Contest, null=False, default=get_or_create_default_contest)
 
     name = models.CharField(max_length=255)
@@ -153,7 +147,7 @@ class Problem(BaseClass):
         return sub, score
 
 
-class Submission(BaseClass):
+class Submission(models.Model):
     STATUSES = (
         ("NT", _('Not Tested')),
         ("CE", _('Compile Error')),
@@ -222,7 +216,7 @@ def test_case_output_path(instance, file):
     return "test_cases/output_" + str(instance.problem.id) + ".txt"
 
 
-class TestCase(BaseClass):
+class TestCase(models.Model):
     TEST_CASE_TYPES = (
         ("IO", _('Input - Output')),
         ("MD", _('Mandatory - Denied')),
@@ -256,7 +250,7 @@ class TestCase(BaseClass):
             return fp.read()
 
 
-class TestResult(BaseClass):
+class TestResult(models.Model):
     STATUSES = (
         ("PD", _("Pending")),  # gettext
         ("OK", _("Okay")),
