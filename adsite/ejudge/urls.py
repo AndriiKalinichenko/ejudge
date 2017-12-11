@@ -20,7 +20,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.conf.urls import patterns, url
 
 urlpatterns = patterns('ejudge.views',
-    url(_(r"^$"),                                               "index",                         {}, "index"),
+    url(_(r"^"), "index", {}, "index"),
     # url(_(r"^problem/(?P<slug>[-\w]+)/$"),                    "problem",                     {}, "problem"),
     # url(_(r"^problem/(?P<slug>[-\w]+)/update/$"),             "problem_update",              {}, "problem_update"),
     # url(_(r"^problem/(?P<slug>[-\w]+)/report/$"),             "problem_report",              {}, "problem_report"),
