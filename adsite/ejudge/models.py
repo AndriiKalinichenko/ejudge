@@ -35,7 +35,7 @@ class Contest(models.Model):
     @property
     def has_started(self):
         return self.start >= timezone.now()
-    
+
     @property
     def status(self):
         if self.is_active:
