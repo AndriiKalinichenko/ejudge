@@ -3,15 +3,13 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Submit, Layout, Field, Button
 from django import forms
 from django_ace import AceWidget
-from taggit.forms import TagField
 from django.contrib.auth.models import AnonymousUser
 
 
-class ChallengeProblemForm(forms.Form):
+class ProblemProblemForm(forms.Form):
     problem = forms.CharField(widget=AceWidget(
                    mode='markdown', theme='monokai', width="100%",
                    wordwrap=True, minlines=21, maxlines=-1))
-    tags = TagField()
 
     def __init__(self, *args, **kwargs):
         super(ChallengeProblemForm, self).__init__(*args, **kwargs)
@@ -20,13 +18,12 @@ class ChallengeProblemForm(forms.Form):
         self.helper.form_id = 'challenge'
         self.helper.layout = Layout(
             Submit('Submit', _('Save'), css_class='top'),
-            Field('tags'),
             Field('problem'),
         )
         self.helper.form_show_labels = False
 
 
-class ChallengeTemplateForm(forms.Form):
+class ProblemTemplateForm(forms.Form):
     submission_template = forms.CharField(widget=AceWidget(
                                    mode='c_cpp', theme='merbivore_soft',
                                    width="100%", minlines=21, maxlines=-1))

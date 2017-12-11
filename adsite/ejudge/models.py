@@ -107,6 +107,7 @@ class Problem(models.Model):
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(unique=True)
     statement = models.TextField(default='')
+    submission_template = models.TextField(default="")
     max_score = models.IntegerField(default=500)
 
     objects = ProblemManager()
@@ -180,9 +181,9 @@ class Submission(models.Model):
 
     class Meta:
         unique_together = ("author", "problem")
-        # permissions = (
-        #     ("can_test_submission", "Can test submission")
-        # )
+        permissions = (
+            ("can_test_submission", "Can test submission")
+        )
 
     def save(self, *args, **kwargs):
         if not kwargs.pop('skip_modified', False):

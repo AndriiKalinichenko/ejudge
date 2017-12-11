@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     # 'django_select2',
     'crispy_forms',
     'django_ace',
-    'taggit',
     'ejudge',
 ]
 
