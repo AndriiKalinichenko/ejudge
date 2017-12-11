@@ -33,11 +33,11 @@ class Contest(models.Model):
 
     @property
     def has_finished(self):
-        return self.end >= timezone.now
+        return self.end >= timezone.now()
 
     @property
     def has_started(self):
-        return self.start >= timezone.now
+        return self.start >= timezone.now()
 
     @property
     def status(self):
