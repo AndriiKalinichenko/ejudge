@@ -181,9 +181,9 @@ class Submission(models.Model):
 
     class Meta:
         unique_together = ("author", "problem")
-        permissions = (
-            ("can_test_submission", "Can test submission")
-        )
+        # permissions = (
+        #     ("can_test_submission", "Can test submission")
+        # )
 
     def save(self, *args, **kwargs):
         if not kwargs.pop('skip_modified', False):

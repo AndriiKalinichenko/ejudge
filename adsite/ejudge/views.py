@@ -15,12 +15,12 @@ from django.utils.html import escape
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_GET, require_POST
-from celery.result import AsyncResult
+# from celery.result import AsyncResult
 from .forms import ProblemProblemForm, ProblemTemplateForm, SubmissionForm
 from .models import TestResult, Contest, Problem, Submission
 # from .tasks import run_popen
-# from .utils import login_and_active_required, check_output, ajax_required, \
-#     get_object_for_user_or_404, build_url, user_id_staff_required
+from .utils import login_and_active_required, check_output, ajax_required, \
+    get_object_for_user_or_404, build_url, user_id_staff_required
 # from djcelery.models import TaskMeta# Create your views here.
 from .models import Contest, Problem
 
