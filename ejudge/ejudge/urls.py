@@ -21,4 +21,5 @@ from . import views
 urlpatterns = [
     url(r'^polls/', views.index, name='index'),
     url(r'^admin/', admin.site.urls),
+    url(r'^contests/(?P<slug>[-\w]+)/submit/$', views.submit_solution, name="submit_solution"),
 ]
