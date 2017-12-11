@@ -96,7 +96,10 @@ def get_or_create_default_contest():
 
 
 class Problem(models.Model):
-    contest = models.ForeignKey(Contest, null=False, default=get_or_create_default_contest)
+    contest = models.ForeignKey(Contest,
+                                null=True,
+                                default=get_or_create_default_contest,
+                                on_delete=models.SET_NULL)
 
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(unique=True)
@@ -158,7 +161,7 @@ class Submission(models.Model):
         ("OK", _('Accepted')),
         ("FA", _('Failed')),
     )
-    problem = models.ForeignKey(Problem)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
 
     code = models.TextField(default="", blank=True)
@@ -172,9 +175,9 @@ class Submission(models.Model):
 
     class Meta:
         unique_together = ("author", "problem")
-        permissions = (
-            ("can_test_submission", "Can test submission")
-        )
+        # permissions = (
+        #     ("can_test_submission", "Can test submission")
+        # )
 
     def save(self, *args, **kwargs):
         if not kwargs.pop('skip_modified', False):
@@ -222,7 +225,7 @@ class TestCase(models.Model):
         ("MD", _('Mandatory - Denied')),
     )
 
-    problem = models.ForeignKey(Problem)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
 
     input = models.FileField(upload_to=test_case_input_path)  # todo hint
     output = models.FileField(upload_to=test_case_output_path)  # todo hint
