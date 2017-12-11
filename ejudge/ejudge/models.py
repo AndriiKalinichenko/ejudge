@@ -3,6 +3,7 @@ from django.db import models
 from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
 
 
 class Contest(models.Model):
@@ -11,6 +12,8 @@ class Contest(models.Model):
     start = models.DateTimeField(default=timezone.now())
     end = models.DateTimeField(default=timezone.now())
     contestants = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True)
+
+    # todo: lists of contests
 
     def __unicode__(self):
         return self.name
@@ -46,23 +49,61 @@ class Contest(models.Model):
     def get_max_score(self):
         return sum([problem.max_score for problem in self.problem_set.all()])
 
-    @property
     def get_contestant_score(self, contestant):
-        return 0  # todo
+        problem_scores = []
+        score = {
+            "contestant": contestant,
+            "problem_scores": problem_scores,
+            "total_score": 0,
+            "isTested": True
+        }
+        submission_exists = False
 
-    @property
+        for problem in self.problem_set.all():
+            submission, problem_score = problem.get_submission_score(contestant)
+
+            if submission is not None:
+                submission_exists = True
+            if problem_score["isTested"]:
+                score["total_score"] += problem_score["score"]
+            else:
+                # If at leas one problem is not tested, then the whole contest score is not tested.
+                score["isTested"] = False
+
+            problem_scores.append((problem, submission, problem_score))
+
+        if not submission_exists:
+            score["isTested"] = False
+        return score
+
     def get_all_contestants_scores(self):
-        return 0  # todo
+        scores = []
 
-    # todo: get scores for contestants
+        for contestant in self.contestants.all():
+            scores.append(self.get_contestant_score(contestant))
+
+        return scores
+
+
+def get_or_create_default_contest():
+    # Try to get the latest created contest. If none exists, create new.
+    try:
+        contest = Contest.objects.all().order_by('id')[0]
+    except IndexError:
+        contest = Contest(name='First contest')
+        contest.save()
+    return contest
 
 
 class Problem(models.Model):
+    contest = models.ForeignKey(Contest, null=False, default=get_or_create_default_contest)
+
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(unique=True)
     statement = models.TextField(default='')
-    contest = models.ForeignKey(Contest, null=False, default=Contest()) # todo : method for default contest
     max_score = models.IntegerField(default=500)
+
+    # todo: tags
 
     def __unicode__(self):
         return self.name
@@ -71,6 +112,24 @@ class Problem(models.Model):
         if not self.id:
             self.slug = slugify(self.name)
         super(Problem, self).save(*args, **kwargs)
+
+    def has_view_permission(self, request, for_user):
+        # Staff can view all problems.
+        if request.user.is_staff:
+            return True
+        # Others can view problem only as themselves if contest is active and they are contestants.
+        if request.user == for_user and self.contest.is_active and request.user in self.contest.contestants.all():
+            return True
+        return False
+
+    def has_view_report_permission(self, request, for_user):
+        # Staff can view all reports.
+        if request.user.is_staff:
+            return True
+        # Others can view their own reports if contest has finished and they were contestants.
+        if request.user == for_user and self.contest.has_finished and request.user in self.contest.contestants.all():
+            return True
+        return False
 
     def get_submission_score(self, contestant):
         score = {"score": 0,
@@ -82,17 +141,15 @@ class Problem(models.Model):
             # if there is no submission score is 0
             score["isTested"] = True
         else:
-            if sub.score_percentage != -1:
-                score["score"] = sub.get_score
+            score["score"] = sub.get_score
+            if score["score"] != -1:
                 score["isTested"] = True
         return sub, score
-
-    # todo: view permissions
 
 
 class Submission(models.Model):
     STATUSES = (
-        ("NT", _('Untested')),
+        ("NT", _('Not Tested')),
         ("CE", _('Compile Error')),
         ("PD", _('Pending')),
         ("TS", _('Tested')),
@@ -102,14 +159,22 @@ class Submission(models.Model):
         ("FA", _('Failed')),
     )
     problem = models.ForeignKey(Problem)
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, on_delete=models.SET_NULL)
+    author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
 
     code = models.TextField(default="", blank=True)
     status = models.CharField(max_length=2, default="NT", choices=STATUSES)
     score_percent = models.IntegerField(default=-1)
+
     created_at = models.DateTimeField(auto_now_add=True)
-    modified_at = models.DateTimeField(auto_now=True) #???
+    modified_at = models.DateTimeField(auto_now=True, editable=False)
+
     is_public = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ("author", "problem")
+        permissions = (
+            ("can_test_submission", "Can test submission")
+        )
 
     def save(self, *args, **kwargs):
         if not kwargs.pop('skip_modified', False):
@@ -120,14 +185,13 @@ class Submission(models.Model):
     def get_result(self):
         if self.status != "TS":
             return self.status
-        failed_tests = self.test_results.exclude(result__in=["OK"])
+        failed_tests = self.test_results.exclude(result__in=["OK"])  # todo: PE?
         return "OK" if len(failed_tests) == 0 else "FA"
 
     @property
     def get_score(self):
         return self.score_percent * self.problem.max_score / 100.0 if self.score_percent != -1 else -1
 
-    @property
     def get_submission_summary(self):
         test_results = self.test_results.all()
         # todo: Presentation Error?
@@ -164,7 +228,7 @@ class TestCase(models.Model):
     output = models.FileField(upload_to=test_case_output_path)  # todo hint
 
     cpu_time_limit = models.IntegerField(default=2000)
-    wallclock_time_limit = models.IntegerField(default=6000)
+    wall_clock_time_limit = models.IntegerField(default=6000)
     memory_limit = models.IntegerField(default=8 * 1024 * 1024)
 
     is_public = models.BooleanField(default=False)
@@ -177,11 +241,11 @@ class TestCase(models.Model):
     def short_hint(self):
         return "%s" % self.hint[:30]
 
-    def show_input(self):
+    def get_input(self):
         with open(self.input.path) as fp:
             return fp.read()
 
-    def show_output(self):
+    def get_output(self):
         with open(self.output.path) as fp:
             return fp.read()
 
@@ -219,8 +283,11 @@ class TestResult(models.Model):
     task_id = models.CharField(max_length=255, default='')
     status = models.CharField(max_length=2, default="PD", choices=STATUSES)
     memory = models.IntegerField(default=0)
-    cputime = models.IntegerField(default=0)
+    cpu_time = models.IntegerField(default=0)
     result = models.CharField(max_length=2, default="PD", choices=RESULTS)
+
+    class Meta:
+        unique_together = ("submission", "test_case")
 
     def save(self, *args, **kwargs):
         if self.status not in ["OK", "PD"]:
