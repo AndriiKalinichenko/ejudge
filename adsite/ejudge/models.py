@@ -9,8 +9,8 @@ from django.utils.translation import ugettext_lazy as _
 class Contest(models.Model):
     name = models.CharField(max_length=255)
     slug_name = models.SlugField(unique=True)
-    start = models.DateTimeField(default=timezone.now())
-    end = models.DateTimeField(default=timezone.now())
+    start = models.DateTimeField(default=timezone.now)
+    end = models.DateTimeField(default=timezone.now)
     contestants = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True)
 
     # todo: lists of contests
@@ -30,11 +30,11 @@ class Contest(models.Model):
 
     @property
     def has_finished(self):
-        return self.end >= timezone.now()
+        return self.end >= timezone.now
 
     @property
     def has_started(self):
-        return self.start >= timezone.now()
+        return self.start >= timezone.now
 
     @property
     def status(self):
@@ -181,7 +181,7 @@ class Submission(models.Model):
 
     def save(self, *args, **kwargs):
         if not kwargs.pop('skip_modified', False):
-            self.modified_at = timezone.now()
+            self.modified_at = timezone.now
         super(Submission, self).save(*args, **kwargs)
 
     @property
