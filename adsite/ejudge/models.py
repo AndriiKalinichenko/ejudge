@@ -4,6 +4,7 @@ from django.template.defaultfilters import slugify
 from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
+from .managers import ContestManager, ProblemManager, ActiveContestManager, InactiveContestManager
 
 
 class Contest(models.Model):
@@ -13,7 +14,9 @@ class Contest(models.Model):
     end = models.DateTimeField(default=timezone.now)
     contestants = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True)
 
-    # todo: lists of contests
+    objects = ContestManager()
+    active = ActiveContestManager()
+    inactive = InactiveContestManager()
 
     def __unicode__(self):
         return self.name
@@ -105,6 +108,8 @@ class Problem(models.Model):
     slug_name = models.SlugField(unique=True)
     statement = models.TextField(default='')
     max_score = models.IntegerField(default=500)
+
+    objects = ProblemManager()
 
     # todo: tags
 

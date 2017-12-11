@@ -13,7 +13,7 @@ class ContestManager(models.Manager):
         if user.is_staff:
             return self.get_queryset()
         t = timezone.now()
-        return (self.get_queryset().filter(participants=user, start__lt=t)
+        return (self.get_queryset().filter(contestant=user, start__lt=t)
                                    .order_by('start'))
 
 
@@ -33,7 +33,7 @@ class InactiveContestManager(ContestManager):
                                                            Q(finish__lt=t)))
 
 
-class ChallengeManager(models.Manager):
+class ProblemManager(models.Manager):
 
     def for_user(self, user):
         """ Filter to only those challenges which are part of the started
@@ -43,5 +43,5 @@ class ChallengeManager(models.Manager):
         if user.is_staff:
             return self.get_queryset()
         t = timezone.now()
-        return self.get_queryset().filter(contest__participants=user,
+        return self.get_queryset().filter(contest__contestants=user,
                                           contest__start__lt=t)

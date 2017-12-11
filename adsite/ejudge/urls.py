@@ -21,13 +21,13 @@ from django.conf.urls import patterns, url
 
 urlpatterns = patterns('ejudge.views',
     url(_(r"^$"),                                               "index",                         {}, "index"),
-    url(_(r"^problem/(?P<slug>[-\w]+)/$"),                    "problem",                     {}, "problem"),
-    url(_(r"^problem/(?P<slug>[-\w]+)/update/$"),             "problem_update",              {}, "problem_update"),
-    url(_(r"^problem/(?P<slug>[-\w]+)/report/$"),             "problem_report",              {}, "problem_report"),
-    url(_(r"^contest/(?P<slug>[-\w]+)/report/$"),               "contest_report",                {}, "contest_report"),
-    url(_(r"^submission/(?P<id>[\d]+)/grade/$"),                "grade_submission",              {}, "grade_submission"),
-    # ajax
-    url(_(r"^problem/(?P<slug>[-\w]+)/template/$"),           "problem_submission_template", {}, "problem_submission_template"),
-    url(_(r"^problem/(?P<slug>[-\w]+)/submission/test/$"),    "submission_test",               {}, "submission_test"),
-    url(_(r"^problem/(?P<slug>[-\w]+)/submission/results/$"), "submission_results",            {}, "submission_results"),
+    # url(_(r"^problem/(?P<slug>[-\w]+)/$"),                    "problem",                     {}, "problem"),
+    # url(_(r"^problem/(?P<slug>[-\w]+)/update/$"),             "problem_update",              {}, "problem_update"),
+    # url(_(r"^problem/(?P<slug>[-\w]+)/report/$"),             "problem_report",              {}, "problem_report"),
+    # url(_(r"^contest/(?P<slug>[-\w]+)/report/$"),               "contest_report",                {}, "contest_report"),
+    # url(_(r"^submission/(?P<id>[\d]+)/grade/$"),                "grade_submission",              {}, "grade_submission"),
+    # # ajax
+    # url(_(r"^problem/(?P<slug>[-\w]+)/template/$"),           "problem_submission_template", {}, "problem_submission_template"),
+    # url(_(r"^problem/(?P<slug>[-\w]+)/submission/test/$"),    "submission_test",               {}, "submission_test"),
+    # url(_(r"^problem/(?P<slug>[-\w]+)/submission/results/$"), "submission_results",            {}, "submission_results"),
 )
