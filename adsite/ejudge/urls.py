@@ -13,21 +13,20 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from . import views
 
-
-from django.utils.translation import ugettext_lazy as _
-from django.conf.urls import patterns, url
-
-urlpatterns = patterns('ejudge.views',
-    url(_(r"^"), "index", {}, "index"),
-    # url(_(r"^problem/(?P<slug>[-\w]+)/$"),                    "problem",                     {}, "problem"),
-    # url(_(r"^problem/(?P<slug>[-\w]+)/update/$"),             "problem_update",              {}, "problem_update"),
-    # url(_(r"^problem/(?P<slug>[-\w]+)/report/$"),             "problem_report",              {}, "problem_report"),
-    # url(_(r"^contest/(?P<slug>[-\w]+)/report/$"),               "contest_report",                {}, "contest_report"),
-    # url(_(r"^submission/(?P<id>[\d]+)/grade/$"),                "grade_submission",              {}, "grade_submission"),
+urlpatterns = [
+    url(r"^problem/(?P<slug>[-\w]+)/$", views.problem, name="problem"),
+    url(r"^problem/(?P<slug>[-\w]+)/update/$", views.problem_update, name="problem_update"),
+    url(r"^problem/(?P<slug>[-\w]+)/report/$", views.problem_report, name="problem_report"),
+    url(r"^contest/(?P<slug>[-\w]+)/report/$", views.contest_report, name="contest_report"),
+    url(r"^submission/(?P<id>[\d]+)/grade/$", views.grade_submission, name="grade_submission"),
     # # ajax
-    # url(_(r"^problem/(?P<slug>[-\w]+)/template/$"),           "problem_submission_template", {}, "problem_submission_template"),
-    # url(_(r"^problem/(?P<slug>[-\w]+)/submission/test/$"),    "submission_test",               {}, "submission_test"),
-    # url(_(r"^problem/(?P<slug>[-\w]+)/submission/results/$"), "submission_results",            {}, "submission_results"),
-)
+    url(r"^problem/(?P<slug>[-\w]+)/template/$", views.problem_submission_template,
+        name="problem_submission_template"),
+    url(r"^problem/(?P<slug>[-\w]+)/submission/test/$", views.submission_test, name="submission_test"),
+    url(r"^problem/(?P<slug>[-\w]+)/submission/results/$", views.submission_results,
+        name="submission_results"),
+    url(r"^$", views.index, name="index"),
+]
