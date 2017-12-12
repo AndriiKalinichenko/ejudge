@@ -175,64 +175,23 @@ def submission_test(request, user, slug):
     if "code" in request.POST:
         submission.code = request.POST["code"]
 
-    # Compile code
-    #TODO: move to celery task as chain
-    program_name = "program_%s_%s_%s" % (
-                                     problem.slug, user.username,
-                                     datetime.now().strftime("%y%m%d-%H%M%S"))
-    program = os.path.join(OJ_PROGRAM_ROOT, program_name)
-    source_file = program+".c"
-    with open(source_file, "w") as f:
-        f.write(submission.code.encode('utf-8').replace('\r', ''))
-    c = subprocess.Popen((OJ_COMPILE_COMMAND % {'program': program}).split(),
-                          stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    (compile_out, compile_err) = c.communicate()
-    ret = c.poll()
-    os.remove(source_file)
-    if ret!=0:
-        submission_status = "CE"  # Compile error
+    test_cases = problem.testcase_set.all()
+    for test_case in test_cases:
+        response = test_code.delay(submission.code, submission.language, test_case.input, test_case.output)
+        test_result, _created = TestResult.objects.get_or_create(submission=submission, test_case=test_case)
+        test_result.task_id = response.id
+        test_result.status = "PD"  # pending
+        test_result.save()
+
+    if len(test_cases) > 0:
+        submission_status = "PD"  # pending
     else:
-        test_cases = problem.testcase_set.filter(type="IO")
-        # Run testcases
-        for (i, tc) in enumerate(test_cases):
-            outpath = "%s_out%03d.txt" % (program, i)
-            errpath = "%s_err%03d.txt" % (program, i)
-            task_configuration = {
-                'args': [program],
-                'inpath': tc.input.path,
-                'outpath': outpath,
-                'errpath': errpath,
-                'quota': dict(
-                              wallclock=tc.wallclock_time_limit,
-                              cpu=tc.cpu_time_limit,
-                              memory=tc.memory_limit,
-                              # This is stdout limit since stdout is disk file.
-                              disk=tc.output.size*2
-                              #disk=tc.disk_limit
-                              ),
-                }
-            # Nonblocking call
-            #result = run_popen.delay(**task_configuration)  #@UndefinedVariable
-            #res = run.delay(**task_configuration)  #nonblocking
-            test_result, _created = TestResult.objects.get_or_create(
-                                                         submission=submission,
-                                                         test_case=tc)
-            #test_result.task_id = result.id
-            test_result.status = "PD"  # Pending
-            test_result.save()
-        if len(test_cases)>0:
-            submission_status = "PD"
-        else:
-            submission_status = "NT"  # Not tested
+        submission_status = "NT"  # not tested
+
     submission.status = submission_status
     submission.save()
     return HttpResponse(
-        json.dumps({"submission_status": submission.status,
-                    "compile_out": escape(compile_out.replace(program,
-                                                              'program')),
-                    "compile_err": escape(compile_err.replace(program,
-                                                              'program')),
-                    }),
+        json.dumps({"submission_status": submission.status}),
         content_type='application/json')
 
 
@@ -254,29 +213,11 @@ def submission_results(request, user, slug):
         async_result = AsyncResult(tr.task_id)
         if async_result.ready():
             result = async_result.result
-            trace = str(result)
-            # regular run task result is either Exception instance or dict
-            #if isinstance(result, Exception):  # for regular run task
-            # run_popen check if in result string there is Exception traceback
-            if "Traceback" in trace:
-                tr.status = 'EX'
+            results = ["PD", "OK", "FA"]
+            if result in results:
+                tr.status = result
             else:
-                # run_popen task result is json string so convert it to dict
-                result = json.loads(trace)
-                tr.status = result['status']
-                tr.memory = result['memory']
-                tr.cputime = result['cputime']
-                tr.result = check_output(tr.test_case.output.path,
-                                         result['outpath'])
-            # remove celery task meta from the database
-            # try:
-            #     tm = TaskMeta.objects.get(task_id=tr.task_id)
-            # except TaskMeta.DoesNotExist:
-            #     pass
-            # else:
-            #     tm.delete()
-            os.remove(result['outpath'])
-            os.remove(result['errpath'])
+                tr.status = "EX"
             tr.save()
     #if there are no pending test results delete program
     if len(TestResult.objects.filter(submission=submission, status="PD"))==0:

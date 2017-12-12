@@ -169,6 +169,9 @@ class Submission(models.Model):
         ("OK", _('Accepted')),
         ("FA", _('Failed')),
     )
+    LANG = (
+        ("python", "python"),
+    )
     problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
 
@@ -180,6 +183,8 @@ class Submission(models.Model):
     modified = models.DateTimeField(auto_now=True, editable=False)
 
     is_public = models.BooleanField(default=False)
+
+    language = models.CharField(choices=LANG)
 
     class Meta:
         unique_together = ("author", "problem")
