@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
 from dreamcode.managers import ContestManager, ProblemManager
+from dreamcode.managers import ContestManager, ActiveContestManager, InactiveContestManager
 
 
 class Contest(models.Model):
@@ -14,9 +15,10 @@ class Contest(models.Model):
     start = models.DateTimeField(default=timezone.now())
     end = models.DateTimeField(default=timezone.now())
     contestants = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True)
-    objects = ContestManager()
 
-    # todo: lists of contests
+    objects = ContestManager()
+    active = ActiveContestManager()
+    inactive = InactiveContestManager()
 
     def __unicode__(self):
         return self.name
@@ -99,7 +101,7 @@ def get_or_create_default_contest():
 
 
 class Problem(models.Model):
-    contest = models.ForeignKey(Contest, null=False, default=get_or_create_default_contest, on_delete=models.CASCADE)
+    contest = models.ForeignKey(Contest, on_delete=models.CASCADE, default=get_or_create_default_contest)
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
