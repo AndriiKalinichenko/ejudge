@@ -1,0 +1,88 @@
+{% extends "dreamcode/base.html" %}
+{% load i18n markup_tags sekizai_tags crispy_forms_tags dreamcode_tags %}
+
+
+
+
+{% block "header" %}{% endblock "header" %}
+
+{% block "content" %}
+
+{% addtoblock "js" %}
+<script>
+$(DOJ.submissionFormSelector).on('click', '#reset', {url: "{% url 'challenge_submission_template' challenge.slug %}"}, DOJ.resetSubmission);
+$(DOJ.submissionFormSelector).on('submit', {url: "{% url 'submission_test' challenge.slug %}", resultsUrl: "{% url 'submission_results' challenge.slug %}"}, DOJ.submissionSubmit);
+DOJ.pollResults(0, "{% url 'submission_results' challenge.slug %}");
+</script>
+{% endaddtoblock %}
+
+{% addtoblock "js" %}
+<script>
+$(".hint").on('click', function (){
+  $(this).children().slideToggle();
+});
+</script>
+{% endaddtoblock %}
+
+{{ submission_form.media }}
+{{ challenge_problem_form.media }}
+{{ challenge_template_form.media }}
+
+
+<h2>{{ challenge.name }}</h2>
+
+{# Nav tabs #}
+<ul class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="active"><a href="#problem" role="tab" data-toggle="tab">{% trans "Problem" %}</a></li>
+  <li role="presentation"><a href="#submission" role="tab" data-toggle="tab">{% trans "Submission" %}</a></li>
+  {% if public_submissions %}
+  <li role="presentation"><a href="#subpub" role="tab" data-toggle="tab">{% trans "Solution" %}</a></li>
+  {% endif %}
+  {% if request.user.is_superuser %}
+  <li role="presentation"><a href="#editproblem" role="tab" data-toggle="tab">{% trans "Edit problem" %}</a></li>
+  <li role="presentation"><a href="#edittemplate" role="tab" data-toggle="tab">{% trans "Edit template" %}</a></li>
+  {% endif %}
+</ul>
+
+{# Tab panes #}
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane fade in active" id="problem">
+    <div class="row">
+      <div class="col-lg-9">
+        {{ challenge.problem|apply_markup:"markdown" }}
+        {% for tc in public_test_cases %}
+          <h2>{% trans "Test Case" %}</h2>
+          {{ tc.hint|apply_markup:"markdown" }}
+          <h3>{% trans "Input" %}</h3>
+          <pre><code>{{ tc.display_input }}</code></pre>
+          <h3>{% trans "Output" %}</h3>
+          <pre><code>{{ tc.display_output }}</code></pre>
+        {% endfor %}
+      </div>
+      <div class="col-lg-3">
+        <h3 class="tags">{% trans "Tags" %}</h3>
+        {% for ti in challenge.tagged_items.all %}
+          <button type="button" class="btn btn-default">{{ ti.tag.name }}</button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="submission">
+    <div id="subres"></div>
+    {% crispy submission_form %}
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="subpub">
+    <div id="subpub">
+      {% for submission in public_submissions %}
+        {{ submission.code|pygmentize }}
+      {% endfor %}
+    </div>
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="editproblem">
+    {% crispy challenge_problem_form %}
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="edittemplate">
+    {% crispy challenge_template_form %}
+  </div>
+</div>
+{% endblock "content" %}

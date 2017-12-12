@@ -17,16 +17,16 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    url(r"^problem/(?P<slug>[-\w]+)/$", views.problem, name="problem"),
-    url(r"^problem/(?P<slug>[-\w]+)/update/$", views.problem_update, name="problem_update"),
-    url(r"^problem/(?P<slug>[-\w]+)/report/$", views.problem_report, name="problem_report"),
+    url(r"^challenge/(?P<slug>[-\w]+)/$", views.challenge, name="challenge"),
+    url(r"^challenge/(?P<slug>[-\w]+)/update/$", views.challenge_update, name="challenge_update"),
+    url(r"^challenge/(?P<slug>[-\w]+)/report/$", views.challenge_report, name="challenge_report"),
     url(r"^contest/(?P<slug>[-\w]+)/report/$", views.contest_report, name="contest_report"),
     url(r"^submission/(?P<id>[\d]+)/grade/$", views.grade_submission, name="grade_submission"),
     # # ajax
-    url(r"^problem/(?P<slug>[-\w]+)/template/$", views.problem_submission_template,
-        name="problem_submission_template"),
-    url(r"^problem/(?P<slug>[-\w]+)/submission/test/$", views.submission_test, name="submission_test"),
-    url(r"^problem/(?P<slug>[-\w]+)/submission/results/$", views.submission_results,
+    url(r"^challenge/(?P<slug>[-\w]+)/template/$", views.challenge_submission_template,
+        name="challenge_submission_template"),
+    url(r"^challenge/(?P<slug>[-\w]+)/submission/test/$", views.submission_test, name="submission_test"),
+    url(r"^challenge/(?P<slug>[-\w]+)/submission/results/$", views.submission_results,
         name="submission_results"),
     url(r"^$", views.index, name="index"),
 ]

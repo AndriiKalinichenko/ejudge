@@ -1,0 +1,23 @@
+{% load i18n markup_tags sekizai_tags humanize %}
+<div class="testresults">
+    <div id="date" title="{{ submission.modified }}">{{ submission.modified|naturaltime }}</div>
+    <div id="result" class="{{ submission_result_code }}">{{ submission_result }}</div>
+    {% for tr in test_results%}
+    <div class="testresult {{ tr.result_code }}">
+        <p class="result">{{ tr.result }}</p>
+        <ul class="details list-unstyled">
+            <li class="memory"><span>{% trans "Memory" %}</span>: {{ tr.memory }} bytes</li>
+            <li class="cpu"><span>{% trans "CPU time" %}</span>: {{ tr.cputime }} ms</li>
+            <li class="exit"><span>{% trans "Exit" %}</span>: {{ tr.status }}</li>
+        </ul>
+        {% if tr.test_case.hint.strip %}
+        <a class="hint" tabindex="0" data-html="true" data-container="body" data-toggle="popover" data-trigger="focus" data-placement="bottom" title="Hint" data-content="{{ tr.test_case.hint.splitlines.0|apply_markup:"markdown" }}">
+        </a>
+        {% endif %}
+        {% if tr.test_case.is_public %}
+        <a class="downloadout" target="_blank" href="{{ tr.test_case.output.url }}"></a>
+        <a class="downloadin" target="_blank" href="{{ tr.test_case.input.url }}"></a>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>

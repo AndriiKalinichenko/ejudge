@@ -1,0 +1,30 @@
+{% load sekizai_tags %}
+<!DOCTYPE html>
+<html itemscope itemtype="http://schema.org/WebPage">
+<head>
+    <title>Django Online Judge</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Online judge"/>
+    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}onlinejudge/lib/bootstrap/bootstrap.min.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}onlinejudge/css/onlinejudge.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}onlinejudge/lib/jsdifflib/diffview.css">
+    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}onlinejudge/lib/pygments-css/github.css">
+    {% render_block 'css' %}
+</head>
+
+<body>
+
+<div class="container">
+	<h1><a href="{% url 'index' %}">Django Online Judge</a></h1>
+	{% block "content" %}{% endblock "content" %}
+</div>
+
+<script type="text/javascript" src="{{ STATIC_URL }}onlinejudge/lib/jquery/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}onlinejudge/lib/bootstrap/bootstrap.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}onlinejudge/lib/jsdifflib/diffview.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}onlinejudge/lib/jsdifflib/difflib.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}onlinejudge/js/onlinejudge.js"></script>
+{% render_block 'js' %}
+</body>
+</html>

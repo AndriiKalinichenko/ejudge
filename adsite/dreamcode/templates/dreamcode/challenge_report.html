@@ -1,0 +1,115 @@
+{% extends "dreamcode/base.html" %}
+{% load i18n markup_tags sekizai_tags humanize dreamcode_tags comments admin_urls %}
+
+
+
+
+{% block "header" %}{% endblock "header" %}
+
+{% block "content" %}
+
+{% if submission %}
+{% addtoblock "js" %}
+<script>
+DOJ.getResults("{% url 'submission_results' challenge.slug %}?user_id={{ user.id }}", "#{{ challenge.slug }}");
+DOJ.prepareDiff("{{ challenge.slug }}");
+</script>
+{% endaddtoblock "js" %}
+{% endif %}
+
+{% if request.user != user %}<h1>{{ user.get_full_name }}</h1>{% endif %}
+
+{% if submission and request.user.is_staff %}
+<form class="form-inline" action="{% url 'grade_submission' submission.id %}" method="POST">
+{% csrf_token %}
+  <div class="form-group">
+    <div class="input-group" style="width: 160px;">
+      <input type="text" class="form-control" name="score_percentage" placeholder="{% trans "Score" %}"{% if score.graded %} value="{{ submission.score_percentage }}"{% endif %}>
+      <div class="input-group-addon">% of {{ challenge.score }}</div>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary">{% trans "Grade" %}</button>
+</form>
+{% endif %}
+
+<h2>{{ challenge.name }}{% if submission and score.graded %} <small>({{ submission.score }}/{{ challenge.score }})</small>{% endif %}
+</h2>
+
+{{ challenge.problem|apply_markup:"markdown" }}
+
+{# Nav tabs #}
+<ul class="nav nav-tabs" role="tablist">
+  <li role="presentation" class="active"><a href="#problem" role="tab" data-toggle="tab">{% trans "Results" %}</a></li>
+  <li role="presentation"><a href="#submission" role="tab" data-toggle="tab">{% trans "Submission" %}</a></li>
+  {% if public_submissions %}
+  <li role="presentation"><a href="#subpub" role="tab" data-toggle="tab">{% trans "Solution" %}</a></li>
+  {% endif %}
+</ul>
+
+{# Tab panes #}
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane fade in active" id="problem">
+    <div id="subres" class="report">
+      <div id="{{ challenge.slug }}"></div>
+    </div>
+    {% if submission %}
+      {#<h3>{% trans "Code" %}</h2>#}
+      <div id="code">
+        <div id="{{ challenge.slug }}-code" class="code">{{ submission.code }}</div>
+        <div id="{{ challenge.slug }}-template" class="template">{{ challenge.submission_template }}</div>
+        <div id="{{ challenge.slug }}-diff"></div>
+        <div>
+          {#{{ submission.code|pygmentize }}#}
+        </div>
+      </div>
+
+      {% if score.graded or request.user.is_staff %}
+        {% get_comment_list for submission as submission_comments %}
+        {% if submission_comments %}
+          <h3>{% trans "Comments" %}</h2>
+          {% for comment in submission_comments %}
+            {% if comment.user_name != "mandenbot" or request.user.is_staff %}
+              <div class="comment">
+                <p><strong>{{ comment.user_name }} {#@ {{ comment.submit_date }}#}</strong><br />
+                {{ comment.comment|apply_markup:"markdown" }}
+                {% if request.user.is_staff %}
+                <a href="{% url 'admin:django_comments_comment_change' comment.pk %}">{% trans "Edit" %}</a>
+                {% endif %}
+              </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      {% endif %}
+
+      {% if request.user.is_staff %}
+        {% get_comment_form for submission as form %}
+        <form action="{% comment_form_target %}" method="POST" class="form-horizontal">
+        {% csrf_token %}
+        {{ form.comment }}
+        {{ form.honeypot }}
+        {{ form.content_type }}
+        {{ form.object_pk }}
+        {{ form.timestamp }}
+        {{ form.security_hash }}
+        <input type="hidden" name="next" value="{% url 'challenge_report' challenge.slug  %}?user_id={{ user.id }}" />
+        <br />
+        <input type="submit" class="btn btn-primary top" value="{% trans 'Add comment' %}" id="id_submit" />
+        </form>
+      {% endif %}
+    {% endif %}
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="submission">
+    <div id="subres">
+      {{ submission.code|pygmentize }}
+    </div>
+  </div>
+  <div role="tabpanel" class="tab-pane fade" id="subpub">
+    <div id="subpub">
+      {% for subpub in public_submissions %}
+        {{ subpub.code|pygmentize }}
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+{% endblock "content" %}

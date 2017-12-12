@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.forms import ModelForm
 # from django_select2 import forms
 # from django.utils.encoding import smart_unicode
-from .models import Problem, Contest, Submission, TestCase
+from .models import Contest, Submission, TestCase
 
 
 # class TestCaseInline(TabularInline):
@@ -74,7 +74,7 @@ from .models import Problem, Contest, Submission, TestCase
 # admin.site.register(Submission, SubmissionAdmin)
 # admin.site.register(TestCase, TestCaseAdmin)
 #
-admin.site.register(Problem)
+# admin.site.register(Problem)
 admin.site.register(Contest)
 admin.site.register(Submission)
 admin.site.register(TestCase)

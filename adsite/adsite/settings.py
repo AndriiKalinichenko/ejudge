@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
 import os
+from django.conf import settings
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,6 +28,17 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+OJ_COMPILE_COMMAND = getattr(settings, "OJ_COMPILER",
+                             ("gcc -DDEBUG(...) --static %(program)s.c -lm "
+                              "-o %(program)s"))
+
+OJ_IP_FILTER = getattr(settings, "OJ_IP_FILTER", False)
+OJ_PROXY_SIGNATURE = getattr(settings, "OJ_PROXY_SIGNATURE", "")
+OJ_USERS_IPS = getattr(settings, "OJ_USERS_IPS", {})
+OJ_REMOTE_ADDR = getattr(settings, "OJ_REMOTE_ADDR", "")
+OJ_PROGRAM_ROOT = getattr(settings, "OJ_PROGRAM_ROOT",
+                          getattr(settings, "MEDIA_ROOT", "."))
+
 
 # Application definition
 
@@ -38,9 +50,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'django_select2',
+    'sekizai',
     'crispy_forms',
     'django_ace',
-    'ejudge',
+    'dreamcode',
 ]
 
 MIDDLEWARE_CLASSES = [
@@ -67,6 +80,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'sekizai.context_processors.sekizai',
             ],
         },
     },
