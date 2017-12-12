@@ -19,7 +19,7 @@ from django.views.decorators.http import require_GET, require_POST
 from taggit.utils import parse_tags
 from celery.result import AsyncResult
 from .forms import ChallengeProblemForm, ChallengeTemplateForm, SubmissionForm
-from .models import TestResult, Contest, Challenge, Submission
+from .models import TestResult, Contest, Problem, Submission
 from adsite.settings import OJ_COMPILE_COMMAND, OJ_PROGRAM_ROOT
 from .utils import login_and_active_required, check_output, ajax_required, \
     get_object_for_user_or_404, build_url, user_id_staff_required
@@ -30,18 +30,18 @@ from .utils import login_and_active_required, check_output, ajax_required, \
 def index(request):
     contests = []
     for con in (Contest.objects.for_user(request.user)
-                                .filter(challenge__isnull=False).distinct()):
+                                .filter(problem__isnull=False).distinct()):
         con.score = con.get_participant_scores(request.user)
-        challenges = []
-        for ch in con.challenge_set.all():
+        problems = []
+        for ch in con.problem_set.all():
             try:
                 submission = ch.submission_set.get(author=request.user)
             except ObjectDoesNotExist:
                 submission = {'result': 'NT'}
             ch.score_calculated = ch.get_submission_score(request.user)[1]
-            challenges.append((ch, submission))
-        if challenges:
-            contests.append((con, challenges))
+            problems.append((ch, submission))
+        if problems:
+            contests.append((con, problems))
 
     return render_to_response("dreamcode/index.html",
                               {
@@ -55,46 +55,46 @@ def index(request):
 @require_GET
 @user_id_staff_required
 @login_and_active_required
-def challenge(request, user, slug):
-    """ Main challenge view with all required forms. """
-    challenge = get_object_or_404(Challenge, slug=slug)
-    if not challenge.has_view_permission(request, for_user=user):
+def problem(request, user, slug):
+    """ Main problem view with all required forms. """
+    problem = get_object_or_404(Problem, slug=slug)
+    if not problem.has_view_permission(request, for_user=user):
         return HttpResponseForbidden()
 
-    problem_form = ChallengeProblemForm({'tags': challenge.tagged_items,
-                                         'problem': challenge.problem})
-    problem_form.helper.form_action = reverse('challenge_update',
-                                              kwargs={'slug': challenge.slug})
+    problem_form = ChallengeProblemForm({
+                                         'problem': problem.statement})
+    problem_form.helper.form_action = reverse('problem_update',
+                                              kwargs={'slug': problem.slug})
 
     template_form = ChallengeTemplateForm(
-                  {'submission_template': challenge.submission_template})
-    template_form.helper.form_action = reverse('challenge_update',
-                                               kwargs={'slug': challenge.slug})
+                  {'submission_template': problem.statement})
+    template_form.helper.form_action = reverse('problem_update',
+                                               kwargs={'slug': problem.slug})
 
     submission, created = Submission.objects.get_or_create(
-                                                       challenge=challenge,
+                                                       problem=problem,
                                                        author=user,
                                                        defaults={"code": ""})
-    public_submissions = Submission.objects.filter(challenge=challenge,
+    public_submissions = Submission.objects.filter(problem=problem,
                                                    is_public=True)
     if created or submission.code.strip()=="":
-        submission.code = challenge.submission_template
+        submission.code = problem.statement
     submission_form = SubmissionForm(
                           {
                            'author': str(submission.author.id),
-                           'challenge': str(submission.challenge.id),
+                           'problem': str(submission.problem.id),
                            'code': submission.code,
                           }, user=user)
     submission_form.helper.form_action = reverse(
                                              'submission_test',
-                                             kwargs={'slug': challenge.slug})
-    public_test_cases = challenge.testcase_set.filter(is_public=True)
-    return render_to_response("dreamcode/challenge.html",
+                                             kwargs={'slug': problem.slug})
+    public_test_cases = problem.testcase_set.filter(is_public=True)
+    return render_to_response("dreamcode/problem.html",
                               {
-                               "challenge_problem_form": problem_form,
-                               "challenge_template_form": template_form,
+                               "problem_problem_form": problem_form,
+                               "problem_template_form": template_form,
                                "submission_form": submission_form,
-                               "challenge": challenge,
+                               "problem": problem,
                                "public_test_cases": public_test_cases,
                                "public_submissions": public_submissions,
                                },
@@ -104,25 +104,25 @@ def challenge(request, user, slug):
 
 @require_GET
 @user_id_staff_required
-def challenge_report(request, user, slug):
+def problem_report(request, user, slug):
     """
-    Challenge report uses the same template as challenge only without
+    Challenge report uses the same template as problem only without
     submission form.
 
     """
-    challenge = get_object_or_404(Challenge, slug=slug)
-    if not challenge.has_view_report_permission(request, for_user=user):
+    problem = get_object_or_404(Problem, slug=slug)
+    if not problem.has_view_report_permission(request, for_user=user):
         return HttpResponseForbidden()
 
-    contest = challenge.contest
-    submission, score = challenge.get_submission_score(user)
-    public_submissions = Submission.objects.filter(challenge=challenge,
+    contest = problem.contest
+    submission, score = problem.get_submission_score(user)
+    public_submissions = Submission.objects.filter(problem=problem,
                                                    is_public=True)
-    return render_to_response("dreamcode/challenge_report.html",
+    return render_to_response("dreamcode/problem_report.html",
                               {
                                "user": user,
                                "contest": contest,
-                               "challenge": challenge,
+                               "problem": problem,
                                "score": score,
                                "submission": submission,
                                "public_submissions": public_submissions,
@@ -132,15 +132,15 @@ def challenge_report(request, user, slug):
 
 
 @require_POST
-@permission_required('dreamcode.can_change_challenge')
-def challenge_update(request, slug):
+@permission_required('dreamcode.can_change_problem')
+def problem_update(request, slug):
     """ Used for updating problem, tags and template via frontend. """
-    challenge = get_object_for_user_or_404(Challenge, request.user, slug=slug)
+    problem = get_object_for_user_or_404(Problem, request.user, slug=slug)
     if "problem" in request.POST:
-        challenge.problem = request.POST["problem"]
+        problem.problem = request.POST["problem"]
     if "submission_template" in request.POST:
-        challenge.submission_template = request.POST["submission_template"]
-    challenge.save()
+        problem.submission_template = request.POST["submission_template"]
+    problem.save()
     if "tags" in request.POST:
         tags = request.POST["tags"]
         try:
@@ -148,16 +148,16 @@ def challenge_update(request, slug):
         except ValueError:
             raise forms.ValidationError(
                 _("Please provide a comma-separated list of tags."))
-        challenge.tags.clear()
-        challenge.tags.add(*tags)
-    return HttpResponseRedirect(reverse('challenge', kwargs={'slug': slug}))
+        problem.tags.clear()
+        problem.tags.add(*tags)
+    return HttpResponseRedirect(reverse('problem', kwargs={'slug': slug}))
 
 
 @ajax_required
 @require_GET
 @permission_required('dreamcode.add_submission')
-def challenge_submission_template(request, slug):
-    ch = get_object_for_user_or_404(Challenge, request.user, slug=slug)
+def problem_submission_template(request, slug):
+    ch = get_object_for_user_or_404(Problem, request.user, slug=slug)
     return HttpResponse(json.dumps({"template": ch.submission_template}),
                         content_type='application/json')
 
@@ -168,10 +168,10 @@ def challenge_submission_template(request, slug):
 @permission_required('dreamcode.can_test_submission')
 def submission_test(request, user, slug):
     """ Saves and tests posted submission. """
-    challenge = get_object_or_404(Challenge, slug=slug)
-    submission = get_object_or_404(Submission, challenge=challenge,
+    problem = get_object_or_404(Problem, slug=slug)
+    submission = get_object_or_404(Submission, problem=problem,
                                    author=user)
-    if not submission.challenge.has_view_permission(request, for_user=user):
+    if not submission.problem.has_view_permission(request, for_user=user):
         return HttpResponseForbidden()
 
     #TODO: if submission is pending do not run again just return current status
@@ -187,7 +187,7 @@ def submission_test(request, user, slug):
     # Compile code
     #TODO: move to celery task as chain
     program_name = "program_%s_%s_%s" % (
-                                     challenge.slug, user.username,
+                                     problem.slug, user.username,
                                      datetime.now().strftime("%y%m%d-%H%M%S"))
     program = os.path.join(OJ_PROGRAM_ROOT, program_name)
     source_file = program+".c"
@@ -201,7 +201,7 @@ def submission_test(request, user, slug):
     if ret!=0:
         submission_status = "CE"  # Compile error
     else:
-        test_cases = challenge.testcase_set.filter(type="IO")
+        test_cases = problem.testcase_set.filter(type="IO")
         # Run testcases
         for (i, tc) in enumerate(test_cases):
             outpath = "%s_out%03d.txt" % (program, i)
@@ -251,8 +251,8 @@ def submission_test(request, user, slug):
 @permission_required('dreamcode.can_test_submission')
 def submission_results(request, user, slug):
     """ Returns existing submissions results for IO test cases. """
-    challenge = get_object_or_404(Challenge, slug=slug)
-    submission = get_object_or_404(Submission, challenge=challenge,
+    problem = get_object_or_404(Problem, slug=slug)
+    submission = get_object_or_404(Submission, problem=problem,
                                    author=user,)
     if not submission.has_view_results_permission(request, for_user=user):
         return HttpResponseForbidden()
@@ -325,7 +325,7 @@ def contest_report(request, slug):
     return render_to_response("dreamcode/contest_report.html",
                               {
                                "contest": contest,
-                               "scores": contest.get_participants_scores(),
+                               "scores": contest.get_all_contestants_scores(),
                                },
                                RequestContext(request),
                               )
@@ -341,6 +341,6 @@ def grade_submission(request, submission_id):
         submission.score_percentage = score_percentage
         submission.save(skip_modified=True)
     return HttpResponseRedirect(
-                            build_url("challenge_report",
-                                      args=[submission.challenge.slug],
+                            build_url("problem_report",
+                                      args=[submission.problem.slug],
                                       get={'user_id': submission.author.id}))

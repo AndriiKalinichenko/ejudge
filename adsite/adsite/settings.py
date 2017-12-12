@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     # 'django_select2',
-    'sekizai',
+    # 'sekizai',
     'crispy_forms',
     'django_ace',
     'dreamcode',
