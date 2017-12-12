@@ -31,7 +31,7 @@ def index(request):
     contests = []
     for con in (Contest.objects.for_user(request.user)
                                 .filter(problem__isnull=False).distinct()):
-        con.score = con.get_participant_scores(request.user)
+        con.score = con.get_contestant_score(request.user)
         problems = []
         for ch in con.problem_set.all():
             try:

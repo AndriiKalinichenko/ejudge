@@ -5,6 +5,8 @@ from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
+from dreamcode.managers import ContestManager
+
 
 class Contest(models.Model):
     name = models.CharField(max_length=255)
@@ -12,6 +14,7 @@ class Contest(models.Model):
     start = models.DateTimeField(default=timezone.now())
     end = models.DateTimeField(default=timezone.now())
     contestants = models.ManyToManyField(settings.AUTH_USER_MODEL, null=True)
+    objects = ContestManager()
 
     # todo: lists of contests
 
@@ -135,7 +138,7 @@ class Problem(models.Model):
         score = {"score": 0,
                  "isTested": False}
         try:
-            sub = Submission.objects.get(author=contestant, challenge=self)
+            sub = Submission.objects.get(author=contestant, problem=self)
         except ObjectDoesNotExist:
             sub = None
             # if there is no submission score is 0
@@ -201,7 +204,7 @@ class Submission(models.Model):
         # Only staff can view submission results for certain user
         if request.user.is_staff:
             return True
-        # Others can view challenge only as themselves if contest has started # and they are participants
+        # Others can view problem only as themselves if contest has started # and they are participants
         contest = self.problem.contest
         if request.user == for_user and contest.has_started and request.user in contest.contestants.all():
             return True
