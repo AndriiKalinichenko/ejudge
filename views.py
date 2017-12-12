@@ -4,6 +4,8 @@ import json
 import subprocess
 from subprocess import PIPE
 from datetime import datetime
+
+from celery.result import AsyncResult
 from django.utils.translation import ugettext_lazy as _
 from django.shortcuts import render_to_response, get_object_or_404
 from django.contrib.auth.decorators import permission_required
@@ -16,6 +18,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.decorators.http import require_GET, require_POST
 # from celery.result import AsyncResult
+from ejudge.tasks import test_code
 from .forms import ProblemProblemForm, ProblemTemplateForm, SubmissionForm
 from .models import TestResult, Contest, Problem, Submission
 # from .tasks import run_popen
@@ -171,9 +174,22 @@ def submission_test(request, user, slug):
     if "code" in request.POST:
         submission.code = request.POST["code"]
 
-    # todo: perform testing
+    test_cases = problem.testcase_set.all()
+    for test_case in test_cases:
+        response = test_code.delay(submission.code, submission.language, test_case.input, test_case.output)
+        test_result, _created = TestResult.objects.get_or_create(submission=submission, test_case=test_case)
+        test_result.task_id = response.id
+        test_result.status = "PD"  # pending
+        test_result.save()
 
+    if len(test_cases) > 0:
+        submission_status = "PD"  # pending
+    else:
+        submission_status = "NT"  # not tested
+
+    submission.status = submission_status
     submission.save()
+
     return HttpResponse(
         json.dumps({"submission_status": submission.status}),
         content_type='application/json')
@@ -197,48 +213,28 @@ def submission_results(request, user, slug):
         async_result = AsyncResult(tr.task_id)
         if async_result.ready():
             result = async_result.result
-            trace = str(result)
-            # regular run task result is either Exception instance or dict
-            #if isinstance(result, Exception):  # for regular run task
-            # run_popen check if in result string there is Exception traceback
-            if "Traceback" in trace:
-                tr.status = 'EX'
+
+            results = ["PD", "OK", "FA"]
+            if result in results:
+                tr.status = result
             else:
-                # run_popen task result is json string so convert it to dict
-                result = json.loads(trace)
-                tr.status = result['status']
-                tr.memory = result['memory']
-                tr.cputime = result['cputime']
-                tr.result = check_output(tr.test_case.output.path,
-                                         result['outpath'])
-            # remove celery task meta from the database
-            try:
-                tm = TaskMeta.objects.get(task_id=tr.task_id)
-            except TaskMeta.DoesNotExist:
-                pass
-            else:
-                tm.delete()
-            os.remove(result['outpath'])
-            os.remove(result['errpath'])
+                tr.status = "EX"
+            # todo: remove celery task meta from the database (djcelery)
+
             tr.save()
-    #if there are no pending test results delete program
-    if len(TestResult.objects.filter(submission=submission, status="PD"))==0:
-        if result is not None:
-            os.remove(result['program'])
+
     test_results = TestResult.objects.filter(submission=submission)
     trs = [{'status': dict(TestResult.STATUSES)[tr.status],
             'status_code': tr.status.lower(),
             'result': dict(TestResult.RESULTS)[tr.result],
             'result_code': tr.result.lower(),
-            'memory': tr.memory,
-            'cputime': tr.cputime,
             'test_case': tr.test_case,
             }
            for tr in test_results]
-    if (len(test_results)>0 and len(test_results.filter(status="PD"))==0 and
-            submission.status!="TS"):
+    if len(test_results) > 0 and len(test_results.filter(status="PD")) == 0 and submission.status != "TS":
         submission.status = "TS"  # Tested
         submission.save()
+
     return render_to_response(
         "ejudge/partials/submission_results.html",
         {

@@ -56,6 +56,8 @@ INSTALLED_APPS = [
     'dreamcode',
     'django_markup',
     # 'django_markdown',
+    'ejudge',
+    'celery',
 ]
 
 MIDDLEWARE_CLASSES = [
