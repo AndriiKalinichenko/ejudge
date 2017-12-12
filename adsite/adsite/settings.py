@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'django_ace',
     'dreamcode',
+    'django_markup',
+    # 'django_markdown',
 ]
 
 MIDDLEWARE_CLASSES = [

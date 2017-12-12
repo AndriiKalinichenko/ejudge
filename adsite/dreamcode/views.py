@@ -141,15 +141,6 @@ def problem_update(request, slug):
     if "submission_template" in request.POST:
         problem.submission_template = request.POST["submission_template"]
     problem.save()
-    if "tags" in request.POST:
-        tags = request.POST["tags"]
-        try:
-            tags = parse_tags(tags)
-        except ValueError:
-            raise forms.ValidationError(
-                _("Please provide a comma-separated list of tags."))
-        problem.tags.clear()
-        problem.tags.add(*tags)
     return HttpResponseRedirect(reverse('problem', kwargs={'slug': slug}))
 
 
@@ -256,7 +247,7 @@ def submission_results(request, user, slug):
                                    author=user,)
     if not submission.has_view_results_permission(request, for_user=user):
         return HttpResponseForbidden()
-
+    
     trace = ""
     result = None
     for tr in TestResult.objects.filter(submission=submission, status="PD"):

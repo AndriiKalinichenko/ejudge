@@ -1,6 +1,6 @@
 {% extends "dreamcode/base.html" %}
-{% load i18n markup_tags sekizai_tags crispy_forms_tags dreamcode_tags %}
-
+{% load i18n markup_tags sekizai_tags crispy_forms_tags dreamcode_tags%}
+{% load staticfiles%}
 
 
 
@@ -10,9 +10,9 @@
 
 {% addtoblock "js" %}
 <script>
-$(DOJ.submissionFormSelector).on('click', '#reset', {url: "{% url 'challenge_submission_template' challenge.slug %}"}, DOJ.resetSubmission);
-$(DOJ.submissionFormSelector).on('submit', {url: "{% url 'submission_test' challenge.slug %}", resultsUrl: "{% url 'submission_results' challenge.slug %}"}, DOJ.submissionSubmit);
-DOJ.pollResults(0, "{% url 'submission_results' challenge.slug %}");
+$(DOJ.submissionFormSelector).on('click', '#reset', {url: "{% url 'problem_submission_template' problem.slug %}"}, DOJ.resetSubmission);
+$(DOJ.submissionFormSelector).on('submit', {url: "{% url 'submission_test' problem.slug %}", resultsUrl: "{% url 'submission_results' problem.slug %}"}, DOJ.submissionSubmit);
+DOJ.pollResults(0, "{% url 'submission_results' problem.slug %}");
 </script>
 {% endaddtoblock %}
 
@@ -25,11 +25,11 @@ $(".hint").on('click', function (){
 {% endaddtoblock %}
 
 {{ submission_form.media }}
-{{ challenge_problem_form.media }}
-{{ challenge_template_form.media }}
+{{ problem_problem_form.media }}
+{{ problem_template_form.media }}
 
 
-<h2>{{ challenge.name }}</h2>
+<h2>{{ problem.name }}</h2>
 
 {# Nav tabs #}
 <ul class="nav nav-tabs" role="tablist">
@@ -49,22 +49,21 @@ $(".hint").on('click', function (){
   <div role="tabpanel" class="tab-pane fade in active" id="problem">
     <div class="row">
       <div class="col-lg-9">
-        {{ challenge.problem|apply_markup:"markdown" }}
+        {{ problem.statement }}
         {% for tc in public_test_cases %}
           <h2>{% trans "Test Case" %}</h2>
-          {{ tc.hint|apply_markup:"markdown" }}
           <h3>{% trans "Input" %}</h3>
           <pre><code>{{ tc.display_input }}</code></pre>
           <h3>{% trans "Output" %}</h3>
           <pre><code>{{ tc.display_output }}</code></pre>
         {% endfor %}
       </div>
-      <div class="col-lg-3">
-        <h3 class="tags">{% trans "Tags" %}</h3>
-        {% for ti in challenge.tagged_items.all %}
-          <button type="button" class="btn btn-default">{{ ti.tag.name }}</button>
-        {% endfor %}
-      </div>
+      <!--<div class="col-lg-3">-->
+        <!--<h3 class="tags">{% trans "Tags" %}</h3>-->
+        <!--{% for ti in problem.tagged_items.all %}-->
+          <!--<button type="button" class="btn btn-default">{{ ti.tag.name }}</button>-->
+        <!--{% endfor %}-->
+      <!--</div>-->
     </div>
   </div>
   <div role="tabpanel" class="tab-pane fade" id="submission">
@@ -78,11 +77,11 @@ $(".hint").on('click', function (){
       {% endfor %}
     </div>
   </div>
-  <div role="tabpanel" class="tab-pane fade" id="editproblem">
-    {% crispy challenge_problem_form %}
-  </div>
-  <div role="tabpanel" class="tab-pane fade" id="edittemplate">
-    {% crispy challenge_template_form %}
-  </div>
+  <!--<div role="tabpanel" class="tab-pane fade" id="editproblem">-->
+    <!--{% crispy problem_problem_form %}-->
+  <!--</div>-->
+  <!--<div role="tabpanel" class="tab-pane fade" id="edittemplate">-->
+    <!--{% crispy problem_template_form %}-->
+  <!--</div>-->
 </div>
 {% endblock "content" %}

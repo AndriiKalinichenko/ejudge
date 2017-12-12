@@ -33,7 +33,7 @@ class InactiveContestManager(ContestManager):
                                                            Q(finish__lt=t)))
 
 
-class ChallengeManager(models.Manager):
+class ProblemManager(models.Manager):
 
     def for_user(self, user):
         """ Filter to only those challenges which are part of the started

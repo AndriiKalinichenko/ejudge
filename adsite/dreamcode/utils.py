@@ -120,7 +120,7 @@ def check_mandatory_deny(md_testcase, code):
     """
     assert md_testcase.type=="MD"
     ret = []
-    template = md_testcase.challenge.submission_template
+    template = md_testcase.problem.submission_template
     template = comment_remover(''.join(template)).splitlines(True)
     code = comment_remover(''.join(code)).splitlines(True)
     new_code = []

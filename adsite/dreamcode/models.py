@@ -5,7 +5,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from dreamcode.managers import ContestManager
+from dreamcode.managers import ContestManager, ProblemManager
 
 
 class Contest(models.Model):
@@ -99,12 +99,18 @@ def get_or_create_default_contest():
 
 
 class Problem(models.Model):
-    contest = models.ForeignKey(Contest, null=False, default=get_or_create_default_contest)
+    contest = models.ForeignKey(Contest, null=False, default=get_or_create_default_contest, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
     statement = models.TextField(default='')
     max_score = models.IntegerField(default=500)
+
+    submission_template = models.TextField(default="")
+    contest = models.ForeignKey(Contest, null=False,
+                                default=get_or_create_default_contest)
+
+    objects = ProblemManager()
 
     # todo: tags
 
@@ -161,7 +167,7 @@ class Submission(models.Model):
         ("OK", _('Accepted')),
         ("FA", _('Failed')),
     )
-    problem = models.ForeignKey(Problem)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
 
     code = models.TextField(default="", blank=True)
@@ -225,7 +231,7 @@ class TestCase(models.Model):
         ("MD", _('Mandatory - Denied')),
     )
 
-    problem = models.ForeignKey(Problem)
+    problem = models.ForeignKey(Problem, on_delete=models.CASCADE)
 
     input = models.FileField(upload_to=test_case_input_path)  # todo hint
     output = models.FileField(upload_to=test_case_output_path)  # todo hint
