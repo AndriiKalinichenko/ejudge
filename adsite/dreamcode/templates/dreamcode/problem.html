@@ -33,14 +33,14 @@ $(".hint").on('click', function (){
 
 {# Nav tabs #}
 <ul class="nav nav-tabs" role="tablist">
-  <li role="presentation" class="active"><a href="#problem" role="tab" data-toggle="tab">{% trans "Problem" %}</a></li>
-  <li role="presentation"><a href="#submission" role="tab" data-toggle="tab">{% trans "Submission" %}</a></li>
+  <li role="presentation" class="active"><a href="problem" role="tab" data-toggle="tab">{% trans "Problem" %}</a></li>
+  <li role="presentation"><a href="submission/results" role="tab" data-toggle="tab">{% trans "Submission" %}</a></li>
   {% if public_submissions %}
-  <li role="presentation"><a href="#subpub" role="tab" data-toggle="tab">{% trans "Solution" %}</a></li>
+  <li role="presentation"><a href="subpub" role="tab" data-toggle="tab">{% trans "Solution" %}</a></li>
   {% endif %}
   {% if request.user.is_superuser %}
-  <li role="presentation"><a href="#editproblem" role="tab" data-toggle="tab">{% trans "Edit problem" %}</a></li>
-  <li role="presentation"><a href="#edittemplate" role="tab" data-toggle="tab">{% trans "Edit template" %}</a></li>
+  <li role="presentation"><a href="editproblem" role="tab" data-toggle="tab">{% trans "Edit problem" %}</a></li>
+  <li role="presentation"><a href="edittemplate" role="tab" data-toggle="tab">{% trans "Edit template" %}</a></li>
   {% endif %}
 </ul>
 

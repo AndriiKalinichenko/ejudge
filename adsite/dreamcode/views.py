@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import os
 import json
+from .tasks import test_code
 import subprocess
 from subprocess import PIPE
 from datetime import datetime
@@ -153,15 +154,13 @@ def problem_submission_template(request, slug):
                         content_type='application/json')
 
 
-@ajax_required
-@require_POST
-@user_id_staff_required
-@permission_required('dreamcode.can_test_submission')
-def submission_test(request, user, slug):
+def submission_test(request, slug):
     """ Saves and tests posted submission. """
     problem = get_object_or_404(Problem, slug=slug)
+    user = request.user
     submission = get_object_or_404(Submission, problem=problem,
                                    author=user)
+    print("dick1")
     if not submission.problem.has_view_permission(request, for_user=user):
         return HttpResponseForbidden()
 
@@ -171,18 +170,24 @@ def submission_test(request, user, slug):
     #                                         {"status": submission.status}}),
     #                content_type='application/json')
 
+    print("dick2")
     # Update code
     if "code" in request.POST:
         submission.code = request.POST["code"]
+        submission.language = "python"
+    print("dick3")
 
     test_cases = problem.testcase_set.all()
+    print("dick3.5")
     for test_case in test_cases:
-        response = test_code.delay(submission.code, submission.language, test_case.input, test_case.output)
+        response = test_code(submission.code, submission.language, test_case.input, test_case.output)
+        print("dick3.10")
         test_result, _created = TestResult.objects.get_or_create(submission=submission, test_case=test_case)
-        test_result.task_id = response.id
-        test_result.status = "PD"  # pending
+        #test_result.task_id = response.id
+        test_result.result = response
+        test_result.status = response#"PD"  # pending
         test_result.save()
-
+    print("dick4")
     if len(test_cases) > 0:
         submission_status = "PD"  # pending
     else:
@@ -190,18 +195,17 @@ def submission_test(request, user, slug):
 
     submission.status = submission_status
     submission.save()
+    print("dick5")
     return HttpResponse(
         json.dumps({"submission_status": submission.status}),
         content_type='application/json')
 
 
-@ajax_required
 @require_GET
-@user_id_staff_required
-@permission_required('dreamcode.can_test_submission')
-def submission_results(request, user, slug):
+def submission_results(request, slug):
     """ Returns existing submissions results for IO test cases. """
     problem = get_object_or_404(Problem, slug=slug)
+    user = request.user
     submission = get_object_or_404(Submission, problem=problem,
                                    author=user,)
     if not submission.has_view_results_permission(request, for_user=user):
@@ -209,30 +213,30 @@ def submission_results(request, user, slug):
     
     trace = ""
     result = None
-    for tr in TestResult.objects.filter(submission=submission, status="PD"):
-        async_result = AsyncResult(tr.task_id)
-        if async_result.ready():
-            result = async_result.result
-            results = ["PD", "OK", "FA"]
-            if result in results:
-                tr.status = result
-            else:
-                tr.status = "EX"
-            tr.save()
+    # for tr in TestResult.objects.filter(submission=submission, status="PD"):
+    #     # async_result = AsyncResult(tr.task_id)
+    #      if True:#async_result.ready():
+    #         # result = async_result.result
+    #         results = ["PD", "OK", "FA"]
+    #         if result in results:
+    #             tr.status = result
+    #         else:
+    #             tr.status = "EX"
+    #         tr.save()
     #if there are no pending test results delete program
     if len(TestResult.objects.filter(submission=submission, status="PD"))==0:
         if result is not None:
             os.remove(result['program'])
     test_results = TestResult.objects.filter(submission=submission)
-    trs = [{'status': dict(TestResult.STATUSES)[tr.status],
-            'status_code': tr.status.lower(),
-            'result': dict(TestResult.RESULTS)[tr.result],
+    print(len(test_results))
+    trs = []
+    for tr in list(test_results):
+        trs.append({'status_code': tr.status,
             'result_code': tr.result.lower(),
             'memory': tr.memory,
-            'cputime': tr.cputime,
             'test_case': tr.test_case,
             }
-           for tr in test_results]
+        )
     if (len(test_results)>0 and len(test_results.filter(status="PD"))==0 and
             submission.status!="TS"):
         submission.status = "TS"  # Tested
@@ -241,8 +245,8 @@ def submission_results(request, user, slug):
         "dreamcode/partials/submission_results.html",
         {
          "submission": submission,
-         "submission_result_code": submission.result.lower(),
-         "submission_result": dict(Submission.RESULTS)[submission.result],
+         "submission_result_code": submission.status.lower(),
+         "submission_result": submission.status,
          "test_results": trs,
          "trace": trace,
          },

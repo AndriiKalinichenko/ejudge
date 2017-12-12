@@ -12,13 +12,15 @@ def add(x, y):
 
 @app.task
 def test_code(src, lang, input, output):
+    print("dick6")
     spec = run(src, [input], lang=lang)
     out_array = spec[0].to_json()['data']
     real_output = ""
+    print("dick7")
     for out in out_array:
         if 'Out' == out[0]:
             real_output += " " + out[1]
-
+    print("dick8")
     # Replace all spacing characters with a single space.
     real_output = re.sub(r"\s+", " ", real_output, flags=re.UNICODE)
 

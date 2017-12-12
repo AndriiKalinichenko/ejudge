@@ -184,7 +184,7 @@ class Submission(models.Model):
 
     is_public = models.BooleanField(default=False)
 
-    language = models.CharField(choices=LANG)
+    language = models.CharField(choices=LANG, max_length=20, default="python")
 
     class Meta:
         unique_together = ("author", "problem")
@@ -285,12 +285,13 @@ class TestResult(models.Model):
         ("R4", _("Reserved result type 4")),
         ("R5", _("Reserved result type 5")),
         ("EX", _("Exception")),
+        ("FA", _("Failed")),
     )
     RESULTS = (
         ("PD", _("Pending")),
         ("OK", _("Accepted")),
         ("PE", _("Presentation error")),
-        ("FA", _("Failed")),
+
     )
 
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='test_results')
