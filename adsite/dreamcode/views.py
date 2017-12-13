@@ -202,6 +202,7 @@ def submission_test(request, slug):
         {
             "problem": problem,
             "submission": submission,
+            "test_results": TestResult.objects.filter(submission=submission),
             "submission_result": submission.result
         },
         RequestContext(request),
@@ -238,7 +239,7 @@ def submission_results(request, slug):
         print(tr.status)
     trs = []
     for tr in list(test_results):
-        trs.append({'status_code': tr.status,
+        trs.append({'status': tr.status,
             'result_code': tr.result,
             'test_case': tr.test_case,
             }

@@ -10,13 +10,16 @@
     <h3>{% trans "Submission result: " %}{{ submission_result }}</h3>
     <h3>{% trans "Test results: " %}</h3>
     {% for tr in test_results %}
-            <div class="testresult {{ tr.result_code }}">
+            <div class="testresult {{ tr.status }}">
                 <ul class="details list-unstyled">
-                    <li class="result">{{ tr.result_code}}</li>
+                    <li class="result">
+                        {{ tr.result_code}}<br/>
+                        <a class="downloadout" target="_blank" href="{{ tr.test_case.output.url }}">Output</a><br/>
+                        <a class="downloadin" target="_blank" href="{{ tr.test_case.input.url }}">Input</a>
+                    </li>
                 </ul>
+
                 {% if tr.test_case.is_public %}
-                    <a class="downloadout" target="_blank" href="{{ tr.test_case.output.url }}">Output</a>
-                    <a class="downloadin" target="_blank" href="{{ tr.test_case.input.url }}">Input</a>
                 {% endif %}
             </div>
     {% endfor %}
