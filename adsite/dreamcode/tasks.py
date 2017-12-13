@@ -11,22 +11,24 @@ def add(x, y):
     return x / y
 
 @app.task
-def test_code(src, lang, input, output):
-    print("dick6")
-    spec = run(src, [input], lang=lang)
+def test_code(src, lang, i_input, i_output):
+    with open(str(i_input), 'r') as myfile:
+        inp_scr = myfile.read()
+    with open(str(i_output), 'r') as myfile:
+        out_scr = myfile.read()
+    spec = run(src, [inp_scr], lang=lang)
     out_array = spec[0].to_json()['data']
+
     real_output = ""
-    print("dick7")
     for out in out_array:
         if 'Out' == out[0]:
-            real_output += " " + out[1]
-    print("dick8")
-    # Replace all spacing characters with a single space.
-    real_output = re.sub(r"\s+", " ", real_output, flags=re.UNICODE)
+            real_output += out[1]
 
-    if real_output == output:
+    if str(real_output) == str(out_scr)[0:-1]:
         result = "OK"
+        print("OK")
     else:
         result = "FA"
+        print("FA")
 
     return result

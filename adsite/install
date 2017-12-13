@@ -1,0 +1,4 @@
+to install:
+django 1.8
+sudo apt-get install python-django-taggit
+pip install django_select2

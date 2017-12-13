@@ -290,8 +290,7 @@ class TestResult(models.Model):
     RESULTS = (
         ("PD", _("Pending")),
         ("OK", _("Accepted")),
-        ("PE", _("Presentation error")),
-
+        ("FA", _("FAILED")),
     )
 
     submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name='test_results')
@@ -307,8 +306,8 @@ class TestResult(models.Model):
         unique_together = ("submission", "test_case")
 
     def save(self, *args, **kwargs):
-        if self.status not in ["OK", "PD"]:
+        if self.status == "OK":
+            self.result = "OK"
+        else:
             self.result = "FA"
-        if self.status == "PD":
-            self.result = "PD"
         super(TestResult, self).save(*args, **kwargs)

@@ -6,9 +6,6 @@
     <div class="testresult {{ tr.result_code }}">
         <ul class="details list-unstyled">
             <li class="result">{{ tr.result_code}}</li>
-            <li class="memory"><span>{% trans "Memory" %}</span>: {{ tr.memory }} bytes</li>
-            <li class="cpu"><span>{% trans "CPU time" %}</span>: {{ tr.cputime }} ms</li>
-            <li class="exit"><span>{% trans "Exit" %}</span>: {{ tr.status }}</li>
         </ul>
         {% if tr.test_case.is_public %}
         <a class="downloadout" target="_blank" href="{{ tr.test_case.output.url }}"></a>

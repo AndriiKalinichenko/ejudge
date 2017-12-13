@@ -160,7 +160,6 @@ def submission_test(request, slug):
     user = request.user
     submission = get_object_or_404(Submission, problem=problem,
                                    author=user)
-    print("dick1")
     if not submission.problem.has_view_permission(request, for_user=user):
         return HttpResponseForbidden()
 
@@ -170,24 +169,20 @@ def submission_test(request, slug):
     #                                         {"status": submission.status}}),
     #                content_type='application/json')
 
-    print("dick2")
     # Update code
     if "code" in request.POST:
         submission.code = request.POST["code"]
         submission.language = "python"
-    print("dick3")
 
     test_cases = problem.testcase_set.all()
-    print("dick3.5")
     for test_case in test_cases:
         response = test_code(submission.code, submission.language, test_case.input, test_case.output)
-        print("dick3.10")
         test_result, _created = TestResult.objects.get_or_create(submission=submission, test_case=test_case)
-        #test_result.task_id = response.id
-        test_result.result = response
+        # test_result.task_id = response.id
         test_result.status = response#"PD"  # pending
+        print(response)
         test_result.save()
-    print("dick4")
+
     if len(test_cases) > 0:
         submission_status = "PD"  # pending
     else:
@@ -195,7 +190,6 @@ def submission_test(request, slug):
 
     submission.status = submission_status
     submission.save()
-    print("dick5")
     return HttpResponse(
         json.dumps({"submission_status": submission.status}),
         content_type='application/json')
@@ -213,40 +207,39 @@ def submission_results(request, slug):
     
     trace = ""
     result = None
-    # for tr in TestResult.objects.filter(submission=submission, status="PD"):
-    #     # async_result = AsyncResult(tr.task_id)
-    #      if True:#async_result.ready():
-    #         # result = async_result.result
-    #         results = ["PD", "OK", "FA"]
-    #         if result in results:
-    #             tr.status = result
-    #         else:
-    #             tr.status = "EX"
-    #         tr.save()
-    #if there are no pending test results delete program
+    for tr in TestResult.objects.filter(submission=submission, status="PD"):
+        # async_result = AsyncResult(tr.task_id)
+         if True:#async_result.ready():
+            # result = async_result.result
+            results = ["PD", "OK", "FA"]
+            if result in results:
+                tr.status = result
+            else:
+                tr.status = "EX"
+            tr.save()
     if len(TestResult.objects.filter(submission=submission, status="PD"))==0:
         if result is not None:
             os.remove(result['program'])
     test_results = TestResult.objects.filter(submission=submission)
-    print(len(test_results))
+    for tr in test_results:
+        print(tr.status)
     trs = []
     for tr in list(test_results):
         trs.append({'status_code': tr.status,
-            'result_code': tr.result.lower(),
-            'memory': tr.memory,
+            'result_code': tr.result,
             'test_case': tr.test_case,
             }
         )
-    if (len(test_results)>0 and len(test_results.filter(status="PD"))==0 and
-            submission.status!="TS"):
-        submission.status = "TS"  # Tested
+    if (len(test_results) == len(test_results.filter(status="OK"))):
+        submission.result = "OK"
+    else:
+        submission.status = "FA"
         submission.save()
     return render_to_response(
         "dreamcode/partials/submission_results.html",
         {
          "submission": submission,
-         "submission_result_code": submission.status.lower(),
-         "submission_result": submission.status,
+         "submission_result": submission.result,
          "test_results": trs,
          "trace": trace,
          },
