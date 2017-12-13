@@ -19,7 +19,7 @@ class Contest(models.Model):
     active = ActiveContestManager()
     inactive = InactiveContestManager()
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
@@ -113,7 +113,7 @@ class Problem(models.Model):
 
     # todo: tags
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     def save(self, *args, **kwargs):
