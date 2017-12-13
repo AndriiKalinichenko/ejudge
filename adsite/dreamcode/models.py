@@ -201,7 +201,7 @@ class Submission(models.Model):
     def get_result(self):
         if self.status != "TS":
             return self.status
-        failed_tests = self.test_results.exclude(result__in=["OK"])  # todo: PE?
+        failed_tests = self.test_results.exclude(result__in=["OK"])
         return "OK" if len(failed_tests) == 0 else "FA"
 
     @property

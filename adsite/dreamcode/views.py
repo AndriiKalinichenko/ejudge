@@ -189,7 +189,7 @@ def submission_test(request, slug):
     #     submission_status = "NT"  # not tested
     #
     # submission.status = submission_status
-    if (len(submission.testresult_set.all()) == len(submission.testresult_set.all().filter(status="OK"))):
+    if (len(TestResult.objects.filter(submission=submission)) == len(TestResult.objects.filter(submission=submission, status="OK"))):
         submission.result = "OK"
     else:
         submission.result = "FA"

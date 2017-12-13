@@ -1,23 +1,41 @@
-{% extends 'dreamcode/temp_base.html' %}
 {% load sekizai_tags %}
 <!DOCTYPE html>
-<html itemscope itemtype="http://schema.org/WebPage">
+<html lang="en">
 <head>
-    <title>Online Judge</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DreamCode judge"/>
-    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dreamcode/lib/bootstrap/bootstrap.min.css">
-    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dreamcode/css/dreamcode.css">
-    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dreamcode/lib/jsdifflib/diffview.css">
-    <link media="screen" rel="stylesheet" type="text/css" href="{{ STATIC_URL }}dreamcode/lib/pygments-css/github.css">
-    {% render_block 'css' %}
-</head>
+    <meta charset="UTF-8">
+    <title>{% block title %}DreamCode{% endblock %}</title>
+    {% load staticfiles %}
+    <link rel="shortcut icon" type="image/png" href="{%  static 'favicon.ico' %}"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <link href='https://fonts.googleapis.com/css?family=Satisfy' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="{% static 'dreamcode/style.css' %}"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
+</head>
 <body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+
+        <!-- Header -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#topNavBar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'index' %}">DreamCode</a>
+        </div>
+
+        <!-- Items -->
+        <div class="collapse navbar-collapse" id="topNavBar">
+
+        </div>
+
+    </div>
+</nav>
 
 <div class="container">
-    <h1><a href="{% url 'index' %}">DreamCode Online Judge</a></h1>
     <div class="container">
         <div class="row">
             {#            <div class="col-sm-2">#}
@@ -44,5 +62,7 @@
 <script type="text/javascript" src="{{ STATIC_URL }}dreamcode/lib/jsdifflib/difflib.js"></script>
 <script type="text/javascript" src="{{ STATIC_URL }}dreamcode/js/dreamcode.js"></script>
 {% render_block 'js' %}
+
 </body>
+
 </html>
