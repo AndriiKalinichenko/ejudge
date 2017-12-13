@@ -5,8 +5,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 
-from dreamcode.managers import ContestManager, ProblemManager
-from dreamcode.managers import ContestManager, ActiveContestManager, InactiveContestManager
+from dreamcode.managers import ContestManager, ActiveContestManager, InactiveContestManager, ProblemManager
 
 
 class Contest(models.Model):
@@ -35,11 +34,11 @@ class Contest(models.Model):
 
     @property
     def has_finished(self):
-        return self.end >= timezone.now()
+        return self.end <= timezone.now()
 
     @property
     def has_started(self):
-        return self.start >= timezone.now()
+        return self.start <= timezone.now()
 
     @property
     def status(self):
@@ -109,8 +108,6 @@ class Problem(models.Model):
     max_score = models.IntegerField(default=500)
 
     submission_template = models.TextField(default="")
-    contest = models.ForeignKey(Contest, null=False,
-                                default=get_or_create_default_contest)
 
     objects = ProblemManager()
 
@@ -178,6 +175,7 @@ class Submission(models.Model):
     code = models.TextField(default="", blank=True)
     status = models.CharField(max_length=2, default="NT", choices=STATUSES)
     score_percent = models.IntegerField(default=-1)
+    result = models.CharField(max_length=2, default="NT", choices=RESULTS)
 
     created = models.DateTimeField(auto_now_add=True)
     modified = models.DateTimeField(auto_now=True, editable=False)
@@ -185,6 +183,8 @@ class Submission(models.Model):
     is_public = models.BooleanField(default=False)
 
     language = models.CharField(choices=LANG, max_length=20, default="python")
+
+    submission_template = models.TextField(default="")
 
     class Meta:
         unique_together = ("author", "problem")

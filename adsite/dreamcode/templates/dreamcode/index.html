@@ -1,50 +1,60 @@
 {% extends "dreamcode/base.html" %}
 {% load i18n %}
+{% load staticfiles %}
 
-{% block "content" %}
-{% if contests %}
-{% for contest , problems in contests %}
-<h2>
-    <span class="clock {{ contest.status }}" title="{{ contest.start }} - {{ contest.finish }}"></span>
-    {{ contest.name }}
-    {% if contest.score.graded %}
-        <small>({{ contest.score.score }}/{{ contest.get_max_score }})</small>
+{% block content %}
+    {% if contests %}
+        {% for contest , problems in contests %}
+            <h2>
+                <span class="clock {{ contest.status }}"></span>
+                {{ contest.name }}
+                {% if contest.score.isTested %}
+                    <small>({{ contest.score.total_score }}/{{ contest.get_max_score }})</small>
+                {% endif %}
+                {% if request.user.is_staff and contest.has_started %}
+                    <br/><a href="{% url 'contest_report' contest.slug %}">{% trans "Report" %}</a><br/>
+                {% endif %}
+            </h2>
+
+
+            <table border="1">
+                <thead>
+                <tr>
+                    <th>{% trans "Problem" %}</th>
+                    <th>{% trans "Result" %}</th>
+                    <th>{% trans "My Submission" %}</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for problem, submission in problems %}
+                    <tr>
+                        <td><a href="{% url 'problem' problem.slug %}">{{ problem.name }}</a> </td>
+                        <td>
+                            {% if contest.has_finished and submission %}
+                                {% if problem.score_calculated.isTested %}
+                                    ({{ problem.score_calculated.score }}/{{ problem.max_score }})
+                                {% else %}
+                                    {% trans "Pending" %}
+                                {% endif %}
+                            {% elif submission %}
+                                {% trans "Submitted" %}
+                            {% else %}
+                                {% trans "Not submitted" %}
+                            {% endif %}
+                        </td>
+                        {% if contest.has_finished  %}
+                            <td><a href="{% url 'problem_report' problem.slug %}">{% trans "View report: " %}{{ problem.name }}</a></td>
+                        {% else %}
+                            <td><a href="{% url 'problem' problem.slug %}">{% trans "Unavailable - contest in progress" %}</a></td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            ------------------------------------------------------------------------------------------
+        {% endfor %}
+    {% else %}
+        <h2>No contests found</h2>
     {% endif %}
-    {% if request.user.is_staff and contest.has_started %}
-        <a href="{% url 'contest_report' contest.slug %}" role="button" class="btn btn-primary btn-xs" title="{% trans "Contest report" %}">
-            <span class="glyphicon glyphicon-file" aria-hidden="true"></span>
-        </a>
-    {% endif %}
-</h2>
 
-
-<table class="table table-hover">
-  <thead>
-    <tr>
-      <th class="result">{% trans "Result" %}</th>
-      <th>{% trans "Problems" %}</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for problem , submission , score in problems %}
-    <tr>
-      <td class="result {{ submission.result.lower }}">
-      {% if contest.status == 'finished' and submission %}
-        {% if problem.score_calculated.graded %}({{ problem.score_calculated.score }}/{{ problem.score }}){% endif %}
-      {% endif %}
-      </td>
-      {% if contest.status == 'finished' %}
-      <td><a href="{% url 'problem_report' problem.slug %}">{{ problem.name }}</a></td>
-      {% else %}
-      <td><a href="{% url 'problem' problem.slug %}">{{ problem.name }}</a></td>
-      {% endif %}
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% endfor %}
-{% else %}
-    <h2>No contests found</h2>
-{% endif %}
-
-{% endblock "content" %}
+{% endblock content %}

@@ -5,7 +5,7 @@
     {% for tr in test_results%}
     <div class="testresult {{ tr.result_code }}">
         <ul class="details list-unstyled">
-            <li class="result">{{ tr.result}}</li>
+            <li class="result">{{ tr.result_code}}</li>
             <li class="memory"><span>{% trans "Memory" %}</span>: {{ tr.memory }} bytes</li>
             <li class="cpu"><span>{% trans "CPU time" %}</span>: {{ tr.cputime }} ms</li>
             <li class="exit"><span>{% trans "Exit" %}</span>: {{ tr.status }}</li>

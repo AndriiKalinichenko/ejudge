@@ -68,7 +68,7 @@ def problem(request, user, slug):
                                               kwargs={'slug': problem.slug})
 
     template_form = ChallengeTemplateForm(
-                  {'submission_template': problem.statement})
+                  {'submission_template': problem.submission_template})
     template_form.helper.form_action = reverse('problem_update',
                                                kwargs={'slug': problem.slug})
 

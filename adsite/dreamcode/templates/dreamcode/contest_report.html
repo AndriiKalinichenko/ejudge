@@ -1,35 +1,53 @@
 {% extends "dreamcode/base.html" %}
-{% load i18n markup_tags sekizai_tags humanize dreamcode_tags comments admin_urls %}
+{% load i18n markup_tags sekizai_tags dreamcode_tags admin_urls %}
 
 
+{% block header %}{% endblock header %}
 
-{% block "header" %}{% endblock "header" %}
-
-{% block "content" %}
+{% block content %}
 <h1>{{ contest.name }}</h1>
 
 {# cps = contest participant score #}
 {% for cps in scores %}
-<h2>{{ cps.participant.get_full_name }}{% if cps.graded %} <small>({{ cps.score }}/{{ contest.score_max }})</small>{% endif %}</h2>
+<h3>{% trans "User: " %}{{ cps.contestant }}
+    {% if not cps.isTested %}
+        <br/>{% trans "Testing in progress" %}<br/>
+    {% else %}
+        <br/>{% trans "Final result" %}<br/>
+    {% endif %}
+    {% trans "Score" %}<small>({{ cps.total_score }}/{{ contest.get_max_score }})</small><br/>
+</h3>
 
-<table class="table table-hover">
+<table border="1">
   <thead>
     <tr>
-      <th class="result">{% trans "Result" %}</th>
-      <th>{% trans "Challenges" %}</th>
+      <th>{% trans "Result" %}</th>
+      <th>{% trans "Problem" %}</th>
     </tr>
   </thead>
   <tbody>
-    {% for challenge , submission , score in cps.challenges %}
+    {% for problem , submission , score in cps.problem_scores %}
     <tr>
-      <td class="result {{ submission.result.lower }}">
-      {% if submission and score.graded %}({{ score.score }}/{{ challenge.score }}){% endif %}
+      <td>
+      {% if submission and score.isTested %}
+          ({{ score.score }}/{{ problem.max_score }})
+      {% elif sumission %}
+          {% trans "Pending" %}
+      {% else %}
+          {% trans "Not submitted" %}
+      {% endif %}
       </td>
-      <td>{% if submission %}<a href="{% url 'challenge_report' challenge.slug %}?user_id={{ cps.participant.id }}" target="_blank">{{ challenge.name }}</a>{% else %}{{ challenge.name }}{% endif %}</td>
+      <td>
+          {% if submission %}
+              <a href="{% url 'problem_report' problem.slug %}?user_id={{ cps.contestant.id }}">{% trans "Report: " %}{{ problem.name }}</a>
+          {% else %}
+              <a href="{% url 'problem' problem.slug %}">{% trans "Problem: " %}{{ problem.name }}</a>
+          {% endif %}
+      </td>
     </tr>
     {% endfor %}
   </tbody>
 </table>
 {% endfor %}
 
-{% endblock "content" %}
+{% endblock content %}
