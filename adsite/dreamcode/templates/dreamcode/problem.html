@@ -12,6 +12,7 @@
 
 
     <h2>{{ problem.name }}</h2>
+    <a href="{% url "submission_results" problem.slug %}">Submission</a>
 
 {#    {% crispy problem_problem_form %}#}
 {#    {% crispy problem_template_form %}<br/>#}

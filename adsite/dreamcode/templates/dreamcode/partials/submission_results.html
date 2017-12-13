@@ -1,16 +1,23 @@
+{% extends "dreamcode/base.html" %}
+
 {% load i18n markup_tags sekizai_tags%}
-<div class="testresults">
-    <div id="date" title="{{ submission.modified }}">{{ submission.modified }}</div>
-    <div id="result" class="{{ submission_result_code }}">{{ submission_result }}</div>
-    {% for tr in test_results%}
-    <div class="testresult {{ tr.result_code }}">
-        <ul class="details list-unstyled">
-            <li class="result">{{ tr.result_code}}</li>
-        </ul>
-        {% if tr.test_case.is_public %}
-        <a class="downloadout" target="_blank" href="{{ tr.test_case.output.url }}"></a>
-        <a class="downloadin" target="_blank" href="{{ tr.test_case.input.url }}"></a>
-        {% endif %}
-    </div>
+
+{% block header %}{% endblock header %}
+
+{% block content %}
+    <h2>{% trans "Submission results for " %} {{ problem.name }}</h2>
+    <h3>{% trans "Submission time: " %}{{ submission.modified }}</h3>
+    <h3>{% trans "Submission result: " %}{{ submission_result }}</h3>
+    <h3>{% trans "Test results: " %}</h3>
+    {% for tr in test_results %}
+            <div class="testresult {{ tr.result_code }}">
+                <ul class="details list-unstyled">
+                    <li class="result">{{ tr.result_code}}</li>
+                </ul>
+                {% if tr.test_case.is_public %}
+                    <a class="downloadout" target="_blank" href="{{ tr.test_case.output.url }}">Output</a>
+                    <a class="downloadin" target="_blank" href="{{ tr.test_case.input.url }}">Input</a>
+                {% endif %}
+            </div>
     {% endfor %}
-</div>
+{% endblock content %}

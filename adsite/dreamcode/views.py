@@ -183,16 +183,29 @@ def submission_test(request, slug):
         print(response)
         test_result.save()
 
-    if len(test_cases) > 0:
-        submission_status = "PD"  # pending
+    # if len(test_cases) > 0:
+    #     submission_status = "PD"  # pending
+    # else:
+    #     submission_status = "NT"  # not tested
+    #
+    # submission.status = submission_status
+    if (len(problem.testcase_set.all()) == len(problem.testcase_set.all().filter(status="OK"))):
+        submission.result = "OK"
     else:
-        submission_status = "NT"  # not tested
-
-    submission.status = submission_status
+        submission.result = "FA"
     submission.save()
-    return HttpResponse(
-        json.dumps({"submission_status": submission.status}),
-        content_type='application/json')
+    # return HttpResponse(
+    #     json.dumps({"submission_status": submission.status}),
+    #     content_type='application/json')
+    return render_to_response(
+        "dreamcode/partials/submission_results.html",
+        {
+            "problem": problem,
+            "submission": submission,
+            "submission_result": submission.result
+        },
+        RequestContext(request),
+    )
 
 
 @require_GET
@@ -233,11 +246,12 @@ def submission_results(request, slug):
     if (len(test_results) == len(test_results.filter(status="OK"))):
         submission.result = "OK"
     else:
-        submission.status = "FA"
-        submission.save()
+        submission.result = "FA"
+    submission.save()
     return render_to_response(
         "dreamcode/partials/submission_results.html",
         {
+         "problem": problem,
          "submission": submission,
          "submission_result": submission.result,
          "test_results": trs,
