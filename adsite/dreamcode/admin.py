@@ -5,7 +5,7 @@ from django.contrib.admin.options import TabularInline
 from django.contrib.auth.models import User
 from django.forms import ModelForm
 from django_select2 import forms
-from .models import Contest, Submission, TestCase, Problem
+from .models import Contest, Submission, TestCase, Problem, TestResult
 
 
 class TestCaseInline(TabularInline):
@@ -73,6 +73,7 @@ admin.site.register(Contest, ContestAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(TestCase, TestCaseAdmin)
 
+admin.site.register(TestResult)
 # admin.site.register(problem)
 # admin.site.register(Contest)
 # admin.site.register(Submission)

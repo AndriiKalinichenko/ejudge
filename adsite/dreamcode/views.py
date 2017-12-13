@@ -175,6 +175,7 @@ def submission_test(request, slug):
         submission.language = "python"
 
     test_cases = problem.testcase_set.all()
+    test_results = []
     for test_case in test_cases:
         response = test_code(submission.code, submission.language, test_case.input, test_case.output)
         test_result, _created = TestResult.objects.get_or_create(submission=submission, test_case=test_case)
@@ -182,6 +183,13 @@ def submission_test(request, slug):
         test_result.status = response#"PD"  # pending
         print(response)
         test_result.save()
+        with open(str(test_case.input), 'r') as myfile:
+            inp_scr = myfile.read()
+        with open(str(test_case.output), 'r') as myfile:
+            out_scr = myfile.read()
+        test_results.append({"status": test_result.status, "input": inp_scr[:40], "output": out_scr[:40]})
+
+
 
     # if len(test_cases) > 0:
     #     submission_status = "PD"  # pending
@@ -202,7 +210,7 @@ def submission_test(request, slug):
         {
             "problem": problem,
             "submission": submission,
-            "test_results": TestResult.objects.filter(submission=submission),
+            "test_results": test_results,  # TestResult.objects.filter(submission=submission),
             "submission_result": submission.result
         },
         RequestContext(request),
@@ -231,19 +239,26 @@ def submission_results(request, slug):
             else:
                 tr.status = "EX"
             tr.save()
+
     if len(TestResult.objects.filter(submission=submission, status="PD"))==0:
         if result is not None:
             os.remove(result['program'])
     test_results = TestResult.objects.filter(submission=submission)
+    trs = []
     for tr in test_results:
         print(tr.status)
-    trs = []
-    for tr in list(test_results):
-        trs.append({'status': tr.status,
-            'result_code': tr.result,
-            'test_case': tr.test_case,
-            }
-        )
+        with open(str(tr.test_case.input), 'r') as myfile:
+            inp_scr = myfile.read()
+        with open(str(tr.test_case.output), 'r') as myfile:
+            out_scr = myfile.read()
+        trs.append({"status": tr.status, "input": inp_scr[:40], "output": out_scr[:40]})
+    # for tr in list(test_results):
+    #     trs.append({'status': tr.status,
+    #         'result_code': tr.result,
+    #         'test_case': tr.test_case,
+    #         }
+    #     )
+
     if (len(test_results) == len(test_results.filter(status="OK"))):
         submission.result = "OK"
     else:
